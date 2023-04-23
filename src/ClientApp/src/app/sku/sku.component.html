@@ -1,0 +1,24 @@
+<h1 id="tableLabel">SKU</h1>
+
+<p *ngIf="!priceDetails?.length"><em>Loading...</em></p>
+
+<h2 *ngIf="priceDetails?.length">Price details for product with SKU: {{priceDetails[0].catalogEntryCode}}</h2>
+<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="priceDetails.length">
+  <thead>
+    <tr>
+      <th>Market</th>
+      <th>Price</th>
+      <th>Currency</th>
+      <th>Start</th>
+      <th>End</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let priceDetail of priceDetails">
+      <td>{{priceDetail.marketId}}</td>
+      <td>{{priceDetail.unitPrice}}</td>
+      <td>{{priceDetail.currencyCode}}</td>
+      <td>{{priceDetail.validFrom}}</td>
+      <td>{{priceDetail.validUntil}}</td>
+    </tr>
+</table>
