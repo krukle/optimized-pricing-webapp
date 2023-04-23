@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace src.Models
 {
@@ -19,7 +20,8 @@ namespace src.Models
         public DateTime ValidFrom { get; set; }
 
         public DateTime? ValidUntil { get; set; }
-
+        
+        [Column (TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; }
     }
 }
