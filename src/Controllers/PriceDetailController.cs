@@ -75,56 +75,80 @@ namespace src.Controllers
             Notera att det i putput-tabellen ovan enbart listas ett giltigt pris för varje tidpunkt per marknad och per valuta (även fast det i exempeldatan är överlappande tider). Tänk på att det kan finnas edgecase som inte täcks av exemplet ovan.
 
                 Output-tabellen ovan med SKU 27773-02 kan användas för att testa din lösning. Om din lösning visar annan data än den i output-tabellen för denna produkt i marknad 'sv' är något fel.*/
-            
             var nonOverlappingPrices = new List<PriceInfo>();
-            PriceInfo prevPrice = null;
 
-            foreach (var price in priceInfos)
+            // Sort priceInfos by MarketId and ValidFrom date
+            priceInfos = priceInfos.OrderBy(p => p.MarketId).ThenBy(p => p.ValidFrom).ToList();
+
+            for (int i = 0; i < priceInfos.Count; i++)
             {
-                if (prevPrice != null &&
-                    (prevPrice.ValidUntil == null || prevPrice.ValidUntil.Value >= price.ValidFrom))
+                var currentPrice = priceInfos[i];
+
+                bool hasOverlap = false;
+
+                for (int j = i + 1; j < priceInfos.Count; j++)
                 {
-                    if (prevPrice.UnitPrice < price.UnitPrice)
+                    var nextPrice = priceInfos[j];
+
+                    if (currentPrice.MarketId != nextPrice.MarketId)
                     {
-                        prevPrice.ValidUntil = price.ValidFrom.AddDays(-1);
-                        nonOverlappingPrices.Add(prevPrice);
-                        nonOverlappingPrices.Add(price);
+                        break;
                     }
-                    else
+
+                    if (currentPrice.ValidUntil == null || currentPrice.ValidUntil.Value >= nextPrice.ValidFrom)
                     {
-                        var tempPrice = new PriceInfo
+                        hasOverlap = true;
+
+                        if (currentPrice.UnitPrice < nextPrice.UnitPrice)
                         {
-                            PriceValueId = prevPrice.PriceValueId,
-                            Created = prevPrice.Created,
-                            Modified = prevPrice.Modified,
-                            CatalogEntryCode = prevPrice.CatalogEntryCode,
-                            MarketId = prevPrice.MarketId,
-                            CurrencyCode = prevPrice.CurrencyCode,
-                            ValidFrom = prevPrice.ValidFrom,
-                            ValidUntil = price.ValidFrom.AddDays(-1),
-                            UnitPrice = prevPrice.UnitPrice,
-                        };
+                            currentPrice.ValidUntil = nextPrice.ValidFrom;
+                            nonOverlappingPrices.Add(currentPrice);
+                        }
+                        else
+                        {
+                            var tempPrice = new PriceInfo
+                            {
+                                PriceValueId = currentPrice.PriceValueId,
+                                Created = currentPrice.Created,
+                                Modified = currentPrice.Modified,
+                                CatalogEntryCode = currentPrice.CatalogEntryCode,
+                                MarketId = currentPrice.MarketId,
+                                CurrencyCode = currentPrice.CurrencyCode,
+                                ValidFrom = currentPrice.ValidFrom,
+                                ValidUntil = nextPrice.ValidFrom,
+                                UnitPrice = currentPrice.UnitPrice,
+                            };
 
-                        nonOverlappingPrices.Add(tempPrice);
+                            nonOverlappingPrices.Add(tempPrice);
 
-                        price.ValidFrom = prevPrice.ValidUntil.HasValue
-                            ? prevPrice.ValidUntil.Value.AddDays(1)
-                            : price.ValidFrom;
-                        nonOverlappingPrices.Add(price);
+                            if (currentPrice.ValidUntil.HasValue &&
+                                currentPrice.ValidUntil.Value > nextPrice.ValidUntil.Value)
+                            {
+                                nextPrice.ValidFrom = nextPrice.ValidUntil.Value;
+                                nonOverlappingPrices.Add(new PriceInfo
+                                {
+                                    PriceValueId = currentPrice.PriceValueId,
+                                    Created = currentPrice.Created,
+                                    Modified = currentPrice.Modified,
+                                    CatalogEntryCode = currentPrice.CatalogEntryCode,
+                                    MarketId = currentPrice.MarketId,
+                                    CurrencyCode = currentPrice.CurrencyCode,
+                                    ValidFrom = nextPrice.ValidUntil.Value,
+                                    ValidUntil = currentPrice.ValidUntil,
+                                    UnitPrice = currentPrice.UnitPrice,
+                                });
+                            }
+                        }
 
-                        prevPrice.ValidFrom = price.ValidUntil.HasValue
-                            ? price.ValidUntil.Value.AddDays(1)
-                            : prevPrice.ValidFrom;
+                        currentPrice = nextPrice;
                     }
                 }
-                else
+
+                if (!hasOverlap)
                 {
-                    nonOverlappingPrices.Add(price);
+                    nonOverlappingPrices.Add(currentPrice);
                 }
-
-                prevPrice = price;
             }
-
 
             /*
             var groupedByMarket = priceInfos.GroupBy(pi => pi.MarketId);
