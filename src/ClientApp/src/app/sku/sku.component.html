@@ -1,9 +1,9 @@
 <h1 id="tableLabel">SKU</h1>
 
-<p *ngIf="!priceDetails?.length"><em>Loading...</em></p>
+<p *ngIf="priceDetails.length==0"><em>Loading...</em></p>
 
-<h2 *ngIf="priceDetails?.length">Price details for product with SKU: {{priceDetails[0].catalogEntryCode}}</h2>
-<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="priceDetails.length">
+<h2 *ngIf="priceDetails.length>=1">Price details for product with SKU: {{priceDetails[0].catalogEntryCode}}</h2>
+<table class='table table-striped' aria-labelledby="tableLabel">
   <thead>
     <tr>
       <th>Market</th>
