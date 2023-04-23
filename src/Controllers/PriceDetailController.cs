@@ -16,101 +16,32 @@ namespace src.Controllers
             _context = context;
         }
 
-        // GET: api/PriceDetail
+        // GET: PriceDetail
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PriceInfo>>> GetPriceInfo()
         {
-          if (_context.PriceInfo.Any() == null)
-          {
-              return NotFound();
-          }
+            Console.WriteLine("PriceDetailController | GetPriceInfo()");
+            if (!_context.PriceInfo.Any())
+            {
+                return NotFound();
+            }
+
             return await _context.PriceInfo.ToListAsync();
         }
 
-        // GET: api/PriceDetail/5
+        // GET: PriceDetail/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<PriceInfo>> GetPriceInfo(int id)
+        public async Task<ActionResult<IEnumerable<PriceInfo>>> GetPriceInfo(string id)
         {
-          if (_context.PriceInfo == null)
-          {
-              return NotFound();
-          }
-            var priceInfo = await _context.PriceInfo.FindAsync(id);
-
-            if (priceInfo == null)
+            Console.WriteLine("PriceDetailController | GetPriceInfo(id)");
+            List<PriceInfo> priceInfos = await _context.PriceInfo.Where(pi => pi.CatalogEntryCode == id).ToListAsync();
+            if (priceInfos.Count == 0)
             {
                 return NotFound();
             }
+            return priceInfos;
 
-            return priceInfo;
         }
-
-        // PUT: api/PriceDetail/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPriceInfo(int id, PriceInfo priceInfo)
-        {
-            if (id != priceInfo.PriceValueId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(priceInfo).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PriceInfoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/PriceDetail
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<PriceInfo>> PostPriceInfo(PriceInfo priceInfo)
-        {
-          if (_context.PriceInfo == null)
-          {
-              return Problem("Entity set 'PriceDetailDbContext.PriceInfo'  is null.");
-          }
-            _context.PriceInfo.Add(priceInfo);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPriceInfo", new { id = priceInfo.PriceValueId }, priceInfo);
-        }
-
-        // DELETE: api/PriceDetail/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePriceInfo(int id)
-        {
-            if (_context.PriceInfo == null)
-            {
-                return NotFound();
-            }
-            var priceInfo = await _context.PriceInfo.FindAsync(id);
-            if (priceInfo == null)
-            {
-                return NotFound();
-            }
-
-            _context.PriceInfo.Remove(priceInfo);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
         private bool PriceInfoExists(int id)
         {
             return (_context.PriceInfo?.Any(e => e.PriceValueId == id)).GetValueOrDefault();
