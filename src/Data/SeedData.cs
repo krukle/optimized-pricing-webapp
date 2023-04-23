@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using src.Models;
 
 namespace src.Data;
@@ -17,12 +18,17 @@ public static class SeedData
         while (!parser.EndOfData)
         {
             string?[]? fields = parser.ReadFields();
-            var newUnitPrice = 0m;
-            if (decimal.TryParse(fields?[8], out var unitPrice))
+            
+            decimal unitPrice;
+            if (decimal.TryParse(fields?[8] ?? string.Empty, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal tempUnitPrice))
             {
-                newUnitPrice = unitPrice;
+                unitPrice = tempUnitPrice;
             }
-
+            else
+            {
+                throw new FormatException($"Unable to parse '{fields?[8]}' as a decimal.");
+            }
+            
             var priceInfo = new PriceInfo
             {
                 PriceValueId = int.Parse(fields?[0] ?? string.Empty),
@@ -33,7 +39,7 @@ public static class SeedData
                 CurrencyCode = fields?[5],
                 ValidFrom = DateTime.Parse(fields?[6] ?? string.Empty),
                 ValidUntil = fields?[7] == "NULL" ? null : DateTime.Parse(fields?[7] ?? string.Empty),
-                UnitPrice = newUnitPrice
+                UnitPrice = unitPrice
             };
             context.Add(priceInfo);
         }
