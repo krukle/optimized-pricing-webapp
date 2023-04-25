@@ -19,7 +19,7 @@ A web application that displays optimized product prices over time, using .NET 7
 
 - [.NET 7.0](https://dotnet.microsoft.com/download/dotnet/7.0) - The back-end framework used
 - [Angular](https://angular.io/) - The front-end framework used
-- [SQLite](https://sqlite.org/index.html) - The database system used
+- [MSSQL](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb?view=sql-server-ver16) -The database system used
 
 ## License
 
