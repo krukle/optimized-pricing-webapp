@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace src.Models
 {
-    public class PriceInfo
+    public class PriceDetail
     {
         [Key] public int PriceValueId { get; set; }
 
@@ -17,11 +17,26 @@ namespace src.Models
 
         [Required] public string? CurrencyCode { get; set; }
 
-        public DateTime ValidFrom { get; set; }
+        public DateTime? ValidFrom { get; set; }
 
         public DateTime? ValidUntil { get; set; }
         
         [Column (TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; }
+        
+            
+        public PriceDetail()
+        {
+        }
+    
+        public PriceDetail(PriceDetail priceDetail)
+        {
+            MarketId = priceDetail.MarketId;
+            UnitPrice = priceDetail.UnitPrice;
+            CurrencyCode = priceDetail.CurrencyCode;
+            ValidFrom = priceDetail.ValidFrom;
+            ValidUntil = priceDetail.ValidUntil;
+        }
     }
+
 }
