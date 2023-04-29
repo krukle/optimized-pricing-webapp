@@ -20,7 +20,6 @@ namespace src.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PriceDetail>>> GetPriceDetail()
         {
-            Console.WriteLine("PriceDetailController | GetPriceDetail()");
             if (!_context.PriceInfo.Any())
             {
                 return NotFound();
@@ -33,7 +32,6 @@ namespace src.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<IEnumerable<PriceDetail>>> GetPriceDetail(string id)
         {
-            Console.WriteLine("PriceDetailController | GetPriceDetail(id)");
             var priceInfos = await _context.PriceInfo.Where(pi => pi.CatalogEntryCode == id).ToListAsync();
             if (priceInfos.Count == 0)
             {
@@ -65,19 +63,6 @@ namespace src.Controllers
                 }
             }
 
-            /*foreach (var priceDetail in priceDetails)
-            {
-                if (priceDetail.MarketId != null &&
-                    priceDetailDictionary.TryGetValue(priceDetail.MarketId, out var info))
-                {
-                    info.Add(priceDetail);
-                }
-                else
-                {
-                    priceDetailDictionary.Add(priceDetail.MarketId!, new List<PriceDetail>() { priceDetail });
-                }
-            }*/
-
             // Variable to hold the priceinfos that are decided.
             var decidedForPriceDetails = new Dictionary<string, List<PriceDetail>>();
 
@@ -106,7 +91,6 @@ namespace src.Controllers
                             pi.ValidUntil < currentPriceDetail.ValidFrom &&
                             pi.UnitPrice > currentPriceDetail.UnitPrice))
                     {
-                        if (marketId == "ko") Console.WriteLine("Adding priceinfo that is not overlapping");
                         decidedForPriceDetails[key].Add(currentPriceDetail);
                     }
 
@@ -116,7 +100,6 @@ namespace src.Controllers
                                  currentPriceDetail.ValidUntil >= pi.ValidUntil &&
                                  pi.UnitPrice > currentPriceDetail.UnitPrice))
                     {
-                        if (marketId == "ko") Console.WriteLine("Adding priceinfo that is overlapping entirely");
                         decidedForPriceDetails[key].RemoveAll(pi =>
                             currentPriceDetail.ValidFrom <= pi.ValidFrom &&
                             currentPriceDetail.ValidUntil >= pi.ValidUntil &&
@@ -130,9 +113,6 @@ namespace src.Controllers
                                  currentPriceDetail.ValidUntil > pi.ValidFrom &&
                                  pi.UnitPrice > currentPriceDetail.UnitPrice))
                     {
-                        if (marketId == "ko")
-                            Console.WriteLine("Adding priceinfo that is overlapping partially from the left");
-
                         // Find the priceInfo that overlaps partially from the left
                         var priceDetail = decidedForPriceDetails[key].First(pi =>
                             currentPriceDetail.ValidFrom <= pi.ValidFrom &&
@@ -166,9 +146,6 @@ namespace src.Controllers
                                  currentPriceDetail.ValidUntil >= pd.ValidUntil &&
                                  pd.UnitPrice > currentPriceDetail.UnitPrice))
                     {
-                        if (marketId == "ko")
-                            Console.WriteLine("Adding priceinfo that is overlapping partially from the right");
-
                         // Find the priceInfo that overlaps partially from the right
                         var priceDetail = decidedForPriceDetails[key].First(pd =>
                             currentPriceDetail.ValidFrom < pd.ValidUntil &&
@@ -202,8 +179,6 @@ namespace src.Controllers
                                  currentPriceDetail.ValidUntil < pd.ValidUntil &&
                                  pd.UnitPrice > currentPriceDetail.UnitPrice))
                     {
-                        if (marketId == "ko") Console.WriteLine("Adding priceinfo that is underlapping entirely");
-
                         // Find the priceInfo that overlaps entirely
                         var priceDetail = decidedForPriceDetails[key].First(pd =>
                             currentPriceDetail.ValidFrom > pd.ValidFrom &&
@@ -243,15 +218,6 @@ namespace src.Controllers
                             ValidUntil = priceDetail.ValidUntil
                         });
                     }
-
-                    if (marketId == "ko")
-                    {
-                        decidedForPriceDetails[key].ForEach(pd =>
-                            Console.WriteLine(
-                                $"PriceInfo: {pd.PriceValueId} - {pd.ValidFrom} - {pd.ValidUntil} - {pd.UnitPrice}"));
-                    }
-
-                    ;
                 }
             }
 

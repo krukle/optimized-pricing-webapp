@@ -19,7 +19,6 @@ export class SkuSearchComponent {
   // On submit. Direct to sku/{sku}.
   onSubmit(event: Event, sku: string) {
     event.preventDefault();
-    console.log('SkuSearchComponent | onSubmit | data ' + sku);
     this.router.navigate(['/sku', sku]);
   }
 

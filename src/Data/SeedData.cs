@@ -48,7 +48,6 @@ public static class SeedData
         context.SaveChanges();
         context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT PriceInfo OFF");
         context.Database.CloseConnection();
-        Console.WriteLine("LoadDataFromCsv() done.");
     }
 
     public static void Initialize(IServiceProvider services)

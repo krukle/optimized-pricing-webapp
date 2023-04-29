@@ -13,12 +13,9 @@ export class SkuComponent {
 
   constructor(http: HttpClient, @Inject('BASE_URL') baseUrl: string, private route: ActivatedRoute) {
     const id = this.route.snapshot.paramMap.get('id');
-    console.log('SkuComponent | constructor | baseUrl ' + baseUrl + ' | id ' + id);
     http.get<PriceDetail[]>(baseUrl + 'pricedetail/' + id).subscribe(result => {
-      console.log('SkuComponent | constructor | subscribe ' + JSON.stringify(result));
       this.priceDetails = result;
     }, error => console.error(error));
-    console.log('SkuComponent | constructor | priceDetails ' + JSON.stringify(this.priceDetails));
   }
 }
 
