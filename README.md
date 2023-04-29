@@ -8,7 +8,7 @@ A web application that displays optimized product prices over time, using .NET 7
 - Calculate optimized prices based on market, currency, and time period
 - Display optimized prices in a tabular format per product using Angular
 - Follow SOLID and DRY principles for clean and maintainable back-end code
-- Utilize SQLite as the database system
+- Utilize MSSQL as the database system
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ A web application that displays optimized product prices over time, using .NET 7
 
 - [.NET 7.0](https://dotnet.microsoft.com/download/dotnet/7.0) - The back-end framework used
 - [Angular](https://angular.io/) - The front-end framework used
-- [SQLite](https://sqlite.org/index.html) - The database system used
+- [MSSQL](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb?view=sql-server-ver16) -The database system used
 
 ## License
 
