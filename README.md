@@ -39,13 +39,19 @@ cd ..
 dotnet build
 ```
 
-6. Run the project:
+6. Update the database to the lastest migration. Creates the database if it didnt exist already:
+
+```bash
+dotnet ef database update
+```
+
+7. Run the project:
 
 ```
 dotnet run
 ```
 
-7. The webapp will be hosted over at https://localhost:7233. 
+8. The webapp will be hosted over at https://localhost:7233. 
 
 ## Features
 
@@ -59,11 +65,13 @@ dotnet run
 
 - .NET SDK 7.0
 - Node.js
+- CLI tools for Entity Framework Core
 
 ## Built With
 
 - [.NET 7.0](https://dotnet.microsoft.com/download/dotnet/7.0) - The back-end framework used
 - [Angular](https://angular.io/) - The front-end framework used
+- [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) - The command-line interface (CLI) tools for Entity Framework Core to perform design-time development tasks.
 - [MSSQL](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb?view=sql-server-ver16) -The database system used
 
 ## License
