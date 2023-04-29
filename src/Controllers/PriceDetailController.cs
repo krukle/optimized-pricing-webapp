@@ -52,7 +52,8 @@ namespace src.Controllers
             // Fill dictionary with priceDetails where key is optimizedPrices.MarketId
             foreach (var priceDetail in priceDetails)
             {
-                if (priceDetail.MarketId != null && priceDetailDictionary.TryGetValue(priceDetail.MarketId, out var info))
+                if (priceDetail.MarketId != null &&
+                    priceDetailDictionary.TryGetValue(priceDetail.MarketId, out var info))
                 {
                     info.Add(priceDetail);
                 }
@@ -83,8 +84,8 @@ namespace src.Controllers
 
                     // DOES NOT OVERLAP AT ALL
                     if (decidedForPriceDetails[market].All(pi =>
-                                 pi.ValidFrom > currentPriceDetail.ValidUntil ||
-                                 pi.ValidUntil < currentPriceDetail.ValidFrom))
+                            pi.ValidFrom > currentPriceDetail.ValidUntil ||
+                            pi.ValidUntil < currentPriceDetail.ValidFrom))
                     {
                         if (market == "sv") Console.WriteLine("Adding priceinfo that is not overlapping");
                         decidedForPriceDetails[market].Add(currentPriceDetail);
@@ -97,7 +98,8 @@ namespace src.Controllers
                     {
                         if (market == "sv") Console.WriteLine("Adding priceinfo that is overlapping entirely");
                         decidedForPriceDetails[market].RemoveAll(pi =>
-                            currentPriceDetail.ValidFrom <= pi.ValidFrom && currentPriceDetail.ValidUntil >= pi.ValidUntil);
+                            currentPriceDetail.ValidFrom <= pi.ValidFrom &&
+                            currentPriceDetail.ValidUntil >= pi.ValidUntil);
                         decidedForPriceDetails[market].Add(currentPriceDetail);
                     }
 
@@ -111,7 +113,8 @@ namespace src.Controllers
 
                         // Find the priceInfo that overlaps partially from the left
                         var priceDetail = decidedForPriceDetails[market].First(pi =>
-                            currentPriceDetail.ValidFrom <= pi.ValidFrom && currentPriceDetail.ValidUntil > pi.ValidFrom);
+                            currentPriceDetail.ValidFrom <= pi.ValidFrom &&
+                            currentPriceDetail.ValidUntil > pi.ValidFrom);
 
                         // Remove the priceInfo from the setMarketPriceInfos
                         decidedForPriceDetails[market].Remove(priceDetail);
@@ -119,11 +122,15 @@ namespace src.Controllers
                         // Add the priceInfo to the setMarketPriceInfos with its validFrom set to the currentPriceInfo's validUntil
                         decidedForPriceDetails[market].Add(new PriceDetail()
                         {
+                            PriceValueId = priceDetail.PriceValueId,
+                            Created = priceDetail.Created,
+                            Modified = priceDetail.Modified,
+                            CatalogEntryCode = priceDetail.CatalogEntryCode,
                             MarketId = priceDetail.MarketId,
-                            UnitPrice = priceDetail.UnitPrice,
                             CurrencyCode = priceDetail.CurrencyCode,
                             ValidFrom = currentPriceDetail.ValidUntil,
-                            ValidUntil = priceDetail.ValidUntil
+                            ValidUntil = priceDetail.ValidUntil,
+                            UnitPrice = priceDetail.UnitPrice
                         });
 
                         // Add the currentPriceInfo to the setMarketPriceInfos
@@ -140,7 +147,8 @@ namespace src.Controllers
 
                         // Find the priceInfo that overlaps partially from the right
                         var priceDetail = decidedForPriceDetails[market].First(pd =>
-                            currentPriceDetail.ValidFrom < pd.ValidUntil && currentPriceDetail.ValidUntil >= pd.ValidUntil);
+                            currentPriceDetail.ValidFrom < pd.ValidUntil &&
+                            currentPriceDetail.ValidUntil >= pd.ValidUntil);
 
                         // Remove the priceInfo from the setMarketPriceInfos
                         decidedForPriceDetails[market].Remove(priceDetail);
@@ -148,6 +156,10 @@ namespace src.Controllers
                         // Add the priceInfo to the setMarketPriceInfos with its validUntil set to the currentPriceInfo's validFrom
                         decidedForPriceDetails[market].Add(new PriceDetail()
                         {
+                            PriceValueId = priceDetail.PriceValueId,
+                            Created = priceDetail.Created,
+                            Modified = priceDetail.Modified,
+                            CatalogEntryCode = priceDetail.CatalogEntryCode,
                             MarketId = priceDetail.MarketId,
                             UnitPrice = priceDetail.UnitPrice,
                             CurrencyCode = priceDetail.CurrencyCode,
@@ -168,7 +180,8 @@ namespace src.Controllers
 
                         // Find the priceInfo that overlaps entirely
                         var priceDetail = decidedForPriceDetails[market].First(pd =>
-                            currentPriceDetail.ValidFrom > pd.ValidFrom && currentPriceDetail.ValidUntil < pd.ValidUntil);
+                            currentPriceDetail.ValidFrom > pd.ValidFrom &&
+                            currentPriceDetail.ValidUntil < pd.ValidUntil);
 
                         // Remove the priceInfo from the setMarketPriceInfos
                         decidedForPriceDetails[market].Remove(priceDetail);
@@ -176,6 +189,10 @@ namespace src.Controllers
                         // Add the priceInfo to the setMarketPriceInfos with its validTo set to the currentPriceInfo's validFrom
                         decidedForPriceDetails[market].Add(new PriceDetail()
                         {
+                            PriceValueId = priceDetail.PriceValueId,
+                            Created = priceDetail.Created,
+                            Modified = priceDetail.Modified,
+                            CatalogEntryCode = priceDetail.CatalogEntryCode,
                             MarketId = priceDetail.MarketId,
                             UnitPrice = priceDetail.UnitPrice,
                             CurrencyCode = priceDetail.CurrencyCode,
@@ -189,6 +206,10 @@ namespace src.Controllers
                         // Add the priceInfo to the setMarketPriceInfos with its validFrom set to the currentPriceInfo's validUntil
                         decidedForPriceDetails[market].Add(new PriceDetail()
                         {
+                            PriceValueId = priceDetail.PriceValueId,
+                            Created = priceDetail.Created,
+                            Modified = priceDetail.Modified,
+                            CatalogEntryCode = priceDetail.CatalogEntryCode,
                             MarketId = priceDetail.MarketId,
                             UnitPrice = priceDetail.UnitPrice,
                             CurrencyCode = priceDetail.CurrencyCode,
@@ -196,23 +217,13 @@ namespace src.Controllers
                             ValidUntil = priceDetail.ValidUntil
                         });
                     }
-
-                    if (market != "sv") continue;
-                    Console.WriteLine(market);
-                    foreach (var decidedForPriceDetail in decidedForPriceDetails[market])
-                    {
-                        Console.WriteLine(decidedForPriceDetail.UnitPrice + " " + decidedForPriceDetail.ValidFrom + " " +
-                                          decidedForPriceDetail.ValidUntil);
-                    }
-
-                    Console.WriteLine();
                 }
             }
 
             // Set the setMarketPriceInfos as a list of priceinfos. Order by marketId and then by validFrom. 
             priceDetails = decidedForPriceDetails.SelectMany(x => x.Value).ToList().OrderBy(pd => pd.MarketId)
                 .ThenBy(pd => pd.ValidFrom).ToList();
-            
+
             // Set the validUntil of priceinfos with DateTime.MaxValue to null
             foreach (var priceDetail in priceDetails.Where(priceDetail => priceDetail.ValidUntil == DateTime.MaxValue))
             {
@@ -220,11 +231,6 @@ namespace src.Controllers
             }
 
             return priceDetails;
-        }
-
-        private bool PriceInfoExists(int id)
-        {
-            return (_context.PriceInfo?.Any(e => e.PriceValueId == id)).GetValueOrDefault();
         }
     }
 }

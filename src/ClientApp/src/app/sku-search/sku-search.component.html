@@ -1,0 +1,11 @@
+<h2>
+  Search for prices using Catalog Entry Code
+</h2>
+
+<form (submit)="onSubmit($event, sku)">
+  <div class="form-group">
+    <input type="search" class="form-control" id="sku-input" aria-describedby="sku-input" placeholder="Enter Catalog Entry Code" required [(ngModel)]="sku" name="sku">
+    <small id="sku-information" class="form-text text-muted">Catalog Entry Code is sometimes referred to as SKU.</small>
+  </div>
+  <button type="submit" class="btn btn-primary">Search</button>
+</form>
