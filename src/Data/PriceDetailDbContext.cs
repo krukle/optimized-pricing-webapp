@@ -14,6 +14,6 @@ namespace src.Data
         {
         }
 
-        public DbSet<src.Models.PriceInfo> PriceInfo { get; set; } = default!;
+        public DbSet<src.Models.PriceDetail> PriceInfo { get; set; } = default!;
     }
 }

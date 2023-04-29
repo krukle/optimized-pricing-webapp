@@ -16,11 +16,11 @@ namespace src.Controllers
             _context = context;
         }
 
-        // GET: PriceDetail
+        // GET: PriceInfo
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PriceInfo>>> GetPriceInfo()
+        public async Task<ActionResult<IEnumerable<PriceDetail>>> GetPriceDetail()
         {
-            Console.WriteLine("PriceDetailController | GetPriceInfo()");
+            Console.WriteLine("PriceDetailController | GetPriceDetail()");
             if (!_context.PriceInfo.Any())
             {
                 return NotFound();
@@ -29,188 +29,197 @@ namespace src.Controllers
             return await _context.PriceInfo.ToListAsync();
         }
 
-        // GET: PriceDetail/5
+        // GET: PriceInfo/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<IEnumerable<PriceInfo>>> GetPriceInfo(string id)
+        public async Task<ActionResult<IEnumerable<PriceDetail>>> GetPriceDetail(string id)
         {
-            Console.WriteLine("PriceDetailController | GetPriceInfo(id)");
+            Console.WriteLine("PriceDetailController | GetPriceDetail(id)");
             var priceInfos = await _context.PriceInfo.Where(pi => pi.CatalogEntryCode == id).ToListAsync();
             if (priceInfos.Count == 0)
             {
                 return NotFound();
             }
 
-            return OptimizePriceInfos(priceInfos);
+            return OptimizePriceDetails(priceInfos);
             ;
         }
 
-        private List<PriceInfo> OptimizePriceInfos(List<PriceInfo> priceInfos)
+        private List<PriceDetail> OptimizePriceDetails(List<PriceDetail> priceDetails)
         {
-            /*
-            Det kan forekomma flera priser i samma valuta och pa samma marknad som ar giltiga under samma period. Då ska det billigaste priset gälla.
+            // Variable to group the pricinfos based of market.    
+            var priceDetailDictionary = new Dictionary<string, List<PriceDetail>>();
 
-                Exempeldata
-                Ett exempel med SKU 27773-02
-            I datasetet (CSV-filen) finns följande priser i SEK för den svenska marknaden
-
-            Exempeldata-tabell:
-                | PriceValueId	| Created | Modified | CatalogEntryCode | MarketId | CurrencyCode | ValidFrom | ValidUntil | UnitPrice |
-                | - | - | - | - | - | - | - | - | - | 
-                | 169530679	| 2018-08-07 00:00:00 | 2018-08-07 00:00:00 | 27773-02 | sv | SEK | 2018-08-07 00:00:00 | 2018-08-19 00:00:00 | 326.800000000 |
-                | 169530677 | 2018-08-07 00:00:00 | 2018-08-07 00:00:00 | 27773-02 | sv | SEK | 2018-06-18 00:00:00 | 2018-08-05 00:00:00 | 399.600000000 |
-                | 169530676 | 2018-08-07 00:00:00 | 2018-08-07 00:00:00 | 27773-02 | sv | SEK | 1970-01-01 00:00:00 | NULL | 439.600000000 |
-                | 169530678 | 2018-08-07 00:00:00 | 2018-08-07 00:00:00 | 27773-02 | sv | SEK | 2018-08-01 00:00:00 | 2018-08-05 00:00:00 | 326.800000000 |
- 
-                Output:
-            Exemplet med produkt 27773-02 ska i din lösning generera följande optimerade tabell med aktuellt försäljningspris.
-                Output-tabell GT Haptik Thin:
-            Marknad	Pris	Valuta	Start och slut
-            sv	439,60	SEK	1970-01-01 00:00 – 2018-06-18 00:00
-            sv	399,60	SEK	2018-06-18 00:00 – 2018-08-01 00:00
-            sv	326,80	SEK	2018-08-01 00:00 – 2018-08-05 00:00
-            sv	439,60	SEK	2018-08-05 00:00 – 2018-08-07 00:00
-            sv	326,80	SEK	2018-08-07 00:00 – 2018-08-19 00:00
-            sv	439,60	SEK	2018-08-19 00:00 –
-
-            Notera att det i putput-tabellen ovan enbart listas ett giltigt pris för varje tidpunkt per marknad och per valuta (även fast det i exempeldatan är överlappande tider). Tänk på att det kan finnas edgecase som inte täcks av exemplet ovan.
-
-                Output-tabellen ovan med SKU 27773-02 kan användas för att testa din lösning. Om din lösning visar annan data än den i output-tabellen för denna produkt i marknad 'sv' är något fel.*/
-            var nonOverlappingPrices = new List<PriceInfo>();
-
-            // Sort priceInfos by MarketId and ValidFrom date
-            priceInfos = priceInfos.OrderBy(p => p.MarketId).ThenBy(p => p.ValidFrom).ToList();
-
-            for (int i = 0; i < priceInfos.Count; i++)
+            // Fill dictionary with priceDetails where key is optimizedPrices.MarketId
+            foreach (var priceDetail in priceDetails)
             {
-                var currentPrice = priceInfos[i];
-
-                bool hasOverlap = false;
-
-                for (int j = i + 1; j < priceInfos.Count; j++)
+                if (priceDetail.MarketId != null && priceDetailDictionary.TryGetValue(priceDetail.MarketId, out var info))
                 {
-                    var nextPrice = priceInfos[j];
-
-                    if (currentPrice.MarketId != nextPrice.MarketId)
-                    {
-                        break;
-                    }
-
-                    if (currentPrice.ValidUntil == null || currentPrice.ValidUntil.Value >= nextPrice.ValidFrom)
-                    {
-                        hasOverlap = true;
-
-                        if (currentPrice.UnitPrice < nextPrice.UnitPrice)
-                        {
-                            currentPrice.ValidUntil = nextPrice.ValidFrom;
-                            nonOverlappingPrices.Add(currentPrice);
-                        }
-                        else
-                        {
-                            var tempPrice = new PriceInfo
-                            {
-                                PriceValueId = currentPrice.PriceValueId,
-                                Created = currentPrice.Created,
-                                Modified = currentPrice.Modified,
-                                CatalogEntryCode = currentPrice.CatalogEntryCode,
-                                MarketId = currentPrice.MarketId,
-                                CurrencyCode = currentPrice.CurrencyCode,
-                                ValidFrom = currentPrice.ValidFrom,
-                                ValidUntil = nextPrice.ValidFrom,
-                                UnitPrice = currentPrice.UnitPrice,
-                            };
-
-                            nonOverlappingPrices.Add(tempPrice);
-
-                            if (currentPrice.ValidUntil.HasValue &&
-                                currentPrice.ValidUntil.Value > nextPrice.ValidUntil.Value)
-                            {
-                                nextPrice.ValidFrom = nextPrice.ValidUntil.Value;
-                                nonOverlappingPrices.Add(new PriceInfo
-                                {
-                                    PriceValueId = currentPrice.PriceValueId,
-                                    Created = currentPrice.Created,
-                                    Modified = currentPrice.Modified,
-                                    CatalogEntryCode = currentPrice.CatalogEntryCode,
-                                    MarketId = currentPrice.MarketId,
-                                    CurrencyCode = currentPrice.CurrencyCode,
-                                    ValidFrom = nextPrice.ValidUntil.Value,
-                                    ValidUntil = currentPrice.ValidUntil,
-                                    UnitPrice = currentPrice.UnitPrice,
-                                });
-                            }
-                        }
-
-                        currentPrice = nextPrice;
-                    }
+                    info.Add(priceDetail);
                 }
-
-                if (!hasOverlap)
+                else
                 {
-                    nonOverlappingPrices.Add(currentPrice);
+                    priceDetailDictionary.Add(priceDetail.MarketId!, new List<PriceDetail>() { priceDetail });
                 }
             }
 
-            /*
-            var groupedByMarket = priceInfos.GroupBy(pi => pi.MarketId);
-            var nonOverlappingPrices = new List<PriceInfo>();
+            // Variable to hold the priceinfos that are decided.
+            var decidedForPriceDetails = new Dictionary<string, List<PriceDetail>>();
+
+            // Loop through all markets
+            foreach (var market in priceDetailDictionary.Keys)
+            {
+                // Add the market to the setMarketPriceInfos dictionary
+                decidedForPriceDetails.Add(market, new List<PriceDetail>());
+
+                // Sort the priceinfos in the market by ValidFrom and then by UnitPrice, highest first.
+                priceDetailDictionary[market] = priceDetailDictionary[market].OrderBy(pi => pi.ValidFrom)
+                    .ThenByDescending(pi => pi.UnitPrice).ToList();
+
+                // Loop through all priceinfos in the market
+                foreach (var currentPriceDetail in priceDetailDictionary[market])
+                {
+                    // If the currentPriceInfo's ValidUntil is null, set it to DateTime.MaxValue
+                    currentPriceDetail.ValidUntil ??= DateTime.MaxValue;
+
+                    // DOES NOT OVERLAP AT ALL
+                    if (decidedForPriceDetails[market].All(pi =>
+                                 pi.ValidFrom > currentPriceDetail.ValidUntil ||
+                                 pi.ValidUntil < currentPriceDetail.ValidFrom))
+                    {
+                        if (market == "sv") Console.WriteLine("Adding priceinfo that is not overlapping");
+                        decidedForPriceDetails[market].Add(currentPriceDetail);
+                    }
+
+                    // OVERLAPS ENTIRELY
+                    else if (decidedForPriceDetails[market].Any(pi =>
+                                 currentPriceDetail.ValidFrom <= pi.ValidFrom &&
+                                 currentPriceDetail.ValidUntil >= pi.ValidUntil))
+                    {
+                        if (market == "sv") Console.WriteLine("Adding priceinfo that is overlapping entirely");
+                        decidedForPriceDetails[market].RemoveAll(pi =>
+                            currentPriceDetail.ValidFrom <= pi.ValidFrom && currentPriceDetail.ValidUntil >= pi.ValidUntil);
+                        decidedForPriceDetails[market].Add(currentPriceDetail);
+                    }
+
+                    // OVERLAPS PARTIALLY FROM THE LEFT
+                    else if (decidedForPriceDetails[market].Any(pi =>
+                                 currentPriceDetail.ValidFrom <= pi.ValidFrom &&
+                                 currentPriceDetail.ValidUntil > pi.ValidFrom))
+                    {
+                        if (market == "sv")
+                            Console.WriteLine("Adding priceinfo that is overlapping partially from the left");
+
+                        // Find the priceInfo that overlaps partially from the left
+                        var priceDetail = decidedForPriceDetails[market].First(pi =>
+                            currentPriceDetail.ValidFrom <= pi.ValidFrom && currentPriceDetail.ValidUntil > pi.ValidFrom);
+
+                        // Remove the priceInfo from the setMarketPriceInfos
+                        decidedForPriceDetails[market].Remove(priceDetail);
+
+                        // Add the priceInfo to the setMarketPriceInfos with its validFrom set to the currentPriceInfo's validUntil
+                        decidedForPriceDetails[market].Add(new PriceDetail()
+                        {
+                            MarketId = priceDetail.MarketId,
+                            UnitPrice = priceDetail.UnitPrice,
+                            CurrencyCode = priceDetail.CurrencyCode,
+                            ValidFrom = currentPriceDetail.ValidUntil,
+                            ValidUntil = priceDetail.ValidUntil
+                        });
+
+                        // Add the currentPriceInfo to the setMarketPriceInfos
+                        decidedForPriceDetails[market].Add(currentPriceDetail);
+                    }
+
+                    // OVERLAPS PARTIALLY FROM THE RIGHT
+                    else if (decidedForPriceDetails[market].Any(pd =>
+                                 currentPriceDetail.ValidFrom < pd.ValidUntil &&
+                                 currentPriceDetail.ValidUntil >= pd.ValidUntil))
+                    {
+                        if (market == "sv")
+                            Console.WriteLine("Adding priceinfo that is overlapping partially from the right");
+
+                        // Find the priceInfo that overlaps partially from the right
+                        var priceDetail = decidedForPriceDetails[market].First(pd =>
+                            currentPriceDetail.ValidFrom < pd.ValidUntil && currentPriceDetail.ValidUntil >= pd.ValidUntil);
+
+                        // Remove the priceInfo from the setMarketPriceInfos
+                        decidedForPriceDetails[market].Remove(priceDetail);
+
+                        // Add the priceInfo to the setMarketPriceInfos with its validUntil set to the currentPriceInfo's validFrom
+                        decidedForPriceDetails[market].Add(new PriceDetail()
+                        {
+                            MarketId = priceDetail.MarketId,
+                            UnitPrice = priceDetail.UnitPrice,
+                            CurrencyCode = priceDetail.CurrencyCode,
+                            ValidFrom = priceDetail.ValidFrom,
+                            ValidUntil = currentPriceDetail.ValidFrom
+                        });
+
+                        // Add the currentPriceInfo to the setMarketPriceInfos
+                        decidedForPriceDetails[market].Add(currentPriceDetail);
+                    }
+
+                    // UNDERLAPS ENTIRELY
+                    else if (decidedForPriceDetails[market].Any(pd =>
+                                 currentPriceDetail.ValidFrom > pd.ValidFrom &&
+                                 currentPriceDetail.ValidUntil < pd.ValidUntil))
+                    {
+                        if (market == "sv") Console.WriteLine("Adding priceinfo that is underlapping entirely");
+
+                        // Find the priceInfo that overlaps entirely
+                        var priceDetail = decidedForPriceDetails[market].First(pd =>
+                            currentPriceDetail.ValidFrom > pd.ValidFrom && currentPriceDetail.ValidUntil < pd.ValidUntil);
+
+                        // Remove the priceInfo from the setMarketPriceInfos
+                        decidedForPriceDetails[market].Remove(priceDetail);
+
+                        // Add the priceInfo to the setMarketPriceInfos with its validTo set to the currentPriceInfo's validFrom
+                        decidedForPriceDetails[market].Add(new PriceDetail()
+                        {
+                            MarketId = priceDetail.MarketId,
+                            UnitPrice = priceDetail.UnitPrice,
+                            CurrencyCode = priceDetail.CurrencyCode,
+                            ValidFrom = priceDetail.ValidFrom,
+                            ValidUntil = currentPriceDetail.ValidFrom
+                        });
+
+                        // Add the currentPriceInfo to the setMarketPriceInfos
+                        decidedForPriceDetails[market].Add(currentPriceDetail);
+
+                        // Add the priceInfo to the setMarketPriceInfos with its validFrom set to the currentPriceInfo's validUntil
+                        decidedForPriceDetails[market].Add(new PriceDetail()
+                        {
+                            MarketId = priceDetail.MarketId,
+                            UnitPrice = priceDetail.UnitPrice,
+                            CurrencyCode = priceDetail.CurrencyCode,
+                            ValidFrom = currentPriceDetail.ValidUntil,
+                            ValidUntil = priceDetail.ValidUntil
+                        });
+                    }
+
+                    if (market != "sv") continue;
+                    Console.WriteLine(market);
+                    foreach (var decidedForPriceDetail in decidedForPriceDetails[market])
+                    {
+                        Console.WriteLine(decidedForPriceDetail.UnitPrice + " " + decidedForPriceDetail.ValidFrom + " " +
+                                          decidedForPriceDetail.ValidUntil);
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+
+            // Set the setMarketPriceInfos as a list of priceinfos. Order by marketId and then by validFrom. 
+            priceDetails = decidedForPriceDetails.SelectMany(x => x.Value).ToList().OrderBy(pd => pd.MarketId)
+                .ThenBy(pd => pd.ValidFrom).ToList();
             
-            foreach(var marketGroup in groupedByMarket)
+            // Set the validUntil of priceinfos with DateTime.MaxValue to null
+            foreach (var priceDetail in priceDetails.Where(priceDetail => priceDetail.ValidUntil == DateTime.MaxValue))
             {
-                var marketId = marketGroup.Key;
-                var marketPrices = marketGroup.ToList();
-                var groupedByCurrency = marketPrices.GroupBy(pi => pi.CurrencyCode);
-                foreach(var currencyGroup in groupedByCurrency)
-                {
-                    var currencyCode = currencyGroup.Key;
-                    var currencyPrices = currencyGroup.ToList();
-                    var groupedByValidFrom = currencyPrices.GroupBy(pi => pi.ValidFrom);
-                    foreach(var validFromGroup in groupedByValidFrom)
-                    {
-                        var validFrom = validFromGroup.Key;
-                        var validFromPrices = validFromGroup.ToList();
-                        var groupedByValidUntil = validFromPrices.GroupBy(pi => pi.ValidUntil);
-                        foreach(var validUntilGroup in groupedByValidUntil)
-                        {
-                            var validUntil = validUntilGroup.Key;
-                            var validUntilPrices = validUntilGroup.ToList();
-                            var cheapestPrice = validUntilPrices.OrderBy(pi => pi.UnitPrice).First();
-                            nonOverlappingPrices.Add(cheapestPrice);
-                        }
-                    }
-                }
-            }*/
-
-            /*
-            /*Sort PriceInfos in each MarketId list by UnitPrice#1#
-            foreach (var (_, value) in priceInfoMap)
-            {
-                value.Sort((x, y) => x.UnitPrice.CompareTo(y.UnitPrice));
+                priceDetail.ValidUntil = null;
             }
 
-            foreach (string? key in from key in priceInfoMap.Keys from priceInfo in priceInfoMap[key] select key)
-            {
-                
-            }
-
-            /*Print map#1#
-            foreach (var (key, value) in priceInfoMap)
-            {
-                Console.WriteLine($"MarketId: {key}");
-                foreach (var priceInfo in value)
-                {
-                    Console.WriteLine($"\t{priceInfo.UnitPrice}");
-                }
-            }
-            
-            var priceInfoList = new List<PriceInfo>();
-            /*Convert map to array of PrinceInfo#1#
-            foreach (var key in priceInfoMap.Keys)
-            {
-                priceInfoList.AddRange(priceInfoMap[key]);
-            }
-            */
-
-            return nonOverlappingPrices;
+            return priceDetails;
         }
 
         private bool PriceInfoExists(int id)

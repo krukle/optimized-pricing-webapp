@@ -29,7 +29,7 @@ public static class SeedData
                 throw new FormatException($"Unable to parse '{fields?[8]}' as a decimal.");
             }
             
-            var priceInfo = new PriceInfo
+            var priceInfo = new PriceDetail
             {
                 PriceValueId = int.Parse(fields?[0] ?? string.Empty),
                 Created = DateTime.Parse(fields?[1] ?? string.Empty),
