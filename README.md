@@ -41,6 +41,10 @@ dotnet build
 
 6. Update the database to the lastest migration. Creates the database if it didnt exist already:
 
+> **Note**
+>
+> Make sure you have the [CLI tools for Entity Framework](https://learn.microsoft.com/en-us/ef/core/cli/dotnet) installed complete with the Microsoft.EntityFrameworkCore.Design package.
+
 ```bash
 dotnet ef database update
 ```
