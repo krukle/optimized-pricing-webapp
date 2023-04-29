@@ -35,6 +35,7 @@ npm install
 5. Head back to the projects root folder and build it:
 
 ```bash
+cd ..
 dotnet build
 ```
 
